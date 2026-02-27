@@ -1,28 +1,39 @@
 import { useTheme } from './hooks/useTheme'
+import { useRouter } from './hooks/useRouter'
 import StatusBar from './components/StatusBar'
-import ClaudeUsage from './components/ClaudeUsage'
-import ModelBreakdown from './components/ModelBreakdown'
-import CostAnalysis from './components/CostAnalysis'
-import ActivityLog from './components/ActivityLog'
-import TaskBoard from './components/TaskBoard'
-import SecurityMonitor from './components/SecurityMonitor'
-import ApiHealth from './components/ApiHealth'
+import Navigation from './components/Navigation'
 import ThemeToggle from './components/ThemeToggle'
+import Overview from './pages/Overview'
+import Projects from './pages/Projects'
+import Claude from './pages/Claude'
+import Infrastructure from './pages/Infrastructure'
 import { isConfigured } from './lib/supabase'
+
+const pages = {
+  overview: Overview,
+  projects: Projects,
+  claude: Claude,
+  infrastructure: Infrastructure,
+}
 
 export default function App() {
   const { dark, toggle } = useTheme()
+  const { page, navigate } = useRouter()
+  const Page = pages[page] || Overview
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-navy shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('overview')}
+            className="flex items-center gap-3 hover:opacity-80"
+          >
             <div className="text-xl font-bold text-white tracking-tight">
               OZ <span className="font-normal text-white/70">Command Center</span>
             </div>
-          </div>
+          </button>
           <div className="flex items-center gap-3">
             {!isConfigured() && (
               <span className="text-xs text-yellow-300 bg-yellow-500/20 px-2 py-1 rounded">
@@ -34,29 +45,17 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-4 space-y-4">
-        {/* Status Bar */}
+      {/* Navigation Tabs */}
+      <Navigation current={page} onNavigate={navigate} />
+
+      {/* Status Bar - always visible */}
+      <div className="max-w-7xl mx-auto px-4 pt-4">
         <StatusBar />
+      </div>
 
-        {/* Claude Intelligence: Usage + Models + Cost */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <ClaudeUsage />
-          <ModelBreakdown />
-          <CostAnalysis />
-        </div>
-
-        {/* Activity Log + Task Board */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ActivityLog />
-          <TaskBoard />
-        </div>
-
-        {/* Security + API Health */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <SecurityMonitor />
-          <ApiHealth />
-        </div>
+      {/* Page Content */}
+      <main className="max-w-7xl mx-auto px-4 py-4">
+        <Page onNavigate={navigate} />
       </main>
 
       {/* Footer */}
