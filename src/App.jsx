@@ -1,5 +1,8 @@
 import { useTheme } from './hooks/useTheme'
 import StatusBar from './components/StatusBar'
+import ClaudeUsage from './components/ClaudeUsage'
+import ModelBreakdown from './components/ModelBreakdown'
+import CostAnalysis from './components/CostAnalysis'
 import ActivityLog from './components/ActivityLog'
 import TaskBoard from './components/TaskBoard'
 import SecurityMonitor from './components/SecurityMonitor'
@@ -33,16 +36,23 @@ export default function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-4 space-y-4">
-        {/* Panel 1: Status Bar */}
+        {/* Status Bar */}
         <StatusBar />
 
-        {/* Panels 2 & 3: Activity Log + Task Board */}
+        {/* Claude Intelligence: Usage + Models + Cost */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <ClaudeUsage />
+          <ModelBreakdown />
+          <CostAnalysis />
+        </div>
+
+        {/* Activity Log + Task Board */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <ActivityLog />
           <TaskBoard />
         </div>
 
-        {/* Panels 4 & 5: Security + API Health */}
+        {/* Security + API Health */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <SecurityMonitor />
           <ApiHealth />
