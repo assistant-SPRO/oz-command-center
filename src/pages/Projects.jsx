@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useRealtimeTable } from '../hooks/useSupabase'
-import { isConfigured } from '../lib/supabase'
-import { X, Filter, ArrowUpDown } from 'lucide-react'
+import { supabase, isConfigured } from '../lib/supabase'
+import { X, Filter, ArrowUpDown, Plus } from 'lucide-react'
 
 const priorityColors = {
   urgent: { bg: 'bg-red-500', text: 'text-white', border: 'border-red-300 dark:border-red-700' },
@@ -64,10 +64,171 @@ function TaskCard({ task, onClick }) {
   )
 }
 
+function CreateTaskModal({ onClose }) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [priority, setPriority] = useState('normal')
+  const [status, setStatus] = useState('todo')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!title.trim()) return
+    setSaving(true)
+    setError(null)
+
+    try {
+      const { error: insertError } = await supabase.from('tasks').insert({
+        title: title.trim(),
+        description: description.trim() || null,
+        priority,
+        status,
+        created_by: 'dashboard',
+      })
+      if (insertError) throw insertError
+      onClose()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full"
+        onClick={e => e.stopPropagation()}
+      >
+        <form onSubmit={handleSubmit} className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">New Task</h3>
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">Title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="What needs to be done?"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                autoFocus
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">Description</label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Optional details..."
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">Priority</label>
+                <select
+                  value={priority}
+                  onChange={e => setPriority(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">Status</label>
+                <select
+                  value={status}
+                  onChange={e => setStatus(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+            </div>
+
+            {error && (
+              <div className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded p-2">
+                {error}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving || !title.trim()}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Creating...' : 'Create Task'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function TaskDetailModal({ task, onClose }) {
   if (!task) return null
 
   const priority = priorityColors[task.priority] || priorityColors.normal
+  const [status, setStatus] = useState(task.status)
+  const [taskPriority, setTaskPriority] = useState(task.priority)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleSave() {
+    if (status === task.status && taskPriority === task.priority) {
+      onClose()
+      return
+    }
+    setSaving(true)
+    setError(null)
+
+    try {
+      const update = {
+        status,
+        priority: taskPriority,
+        updated_at: new Date().toISOString(),
+      }
+      if (status === 'done' && task.status !== 'done') {
+        update.completed_at = new Date().toISOString()
+      }
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update(update)
+        .eq('id', task.id)
+      if (updateError) throw updateError
+      onClose()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -107,6 +268,52 @@ function TaskDetailModal({ task, onClose }) {
             )}
           </div>
 
+          {/* Editable fields */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Update</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Status</label>
+                <select
+                  value={status}
+                  onChange={e => setStatus(e.target.value)}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Priority</label>
+                <select
+                  value={taskPriority}
+                  onChange={e => setTaskPriority(e.target.value)}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+            {error && (
+              <div className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded p-2 mt-2">
+                {error}
+              </div>
+            )}
+            <div className="flex justify-end mt-3">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-gray-500 dark:text-gray-400">Created</span>
@@ -140,6 +347,7 @@ export default function Projects() {
     limit: 200
   })
   const [selectedTask, setSelectedTask] = useState(null)
+  const [showCreate, setShowCreate] = useState(false)
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [sortBy, setSortBy] = useState('created_at')
 
@@ -167,6 +375,15 @@ export default function Projects() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">Project Board</h1>
         <div className="flex items-center gap-2">
+          {/* New Task Button */}
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-sm"
+          >
+            <Plus size={14} />
+            New Task
+          </button>
+
           {/* Priority Filter */}
           <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-700">
             <Filter size={14} className="text-gray-400" />
@@ -245,6 +462,7 @@ export default function Projects() {
       )}
 
       <TaskDetailModal task={selectedTask} onClose={() => setSelectedTask(null)} />
+      {showCreate && <CreateTaskModal onClose={() => setShowCreate(false)} />}
     </div>
   )
 }

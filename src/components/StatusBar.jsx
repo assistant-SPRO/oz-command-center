@@ -95,7 +95,9 @@ export default function StatusBar() {
         <div className="px-4 py-2 bg-blue-600/30 border-t border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Loader size={14} className="text-blue-300 animate-spin" />
-            <span className="text-sm text-blue-100">{currentTask}</span>
+            <span className="text-sm text-blue-100">
+              {currentTask && currentTask.length > 80 ? currentTask.slice(0, 80) + '...' : currentTask}
+            </span>
           </div>
           <div className="flex items-center gap-1.5 text-blue-200">
             <Clock size={12} />

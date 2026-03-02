@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useRealtimeTable } from '../hooks/useSupabase'
 import { isConfigured } from '../lib/supabase'
 import { DollarSign, TrendingDown, TrendingUp } from 'lucide-react'
@@ -43,17 +44,20 @@ export default function CostAnalysis() {
     limit: 1000
   })
 
+  const [planKey, setPlanKey] = useState(() =>
+    localStorage.getItem('oz-plan') || 'max_5x'
+  )
+
   const thisMonth = getTimeRange(usage, 24 * 30)
   const apiCost = estimateCost(thisMonth)
-  const currentPlan = PLANS.max_5x // Default assumption, could be configurable
+  const currentPlan = PLANS[planKey] || PLANS.max_5x
 
   const savings = currentPlan.monthly - apiCost
   const isSaving = savings > 0
-  const savingsPct = apiCost > 0 ? ((savings / apiCost) * 100).toFixed(0) : 0
 
   // Daily average
   const daysTracked = Math.max(1, Math.ceil(
-    thisMonth.length > 0
+    thisMonth.length > 1
       ? (Date.now() - new Date(thisMonth[thisMonth.length - 1]?.timestamp).getTime()) / (24 * 60 * 60 * 1000)
       : 1
   ))
@@ -62,10 +66,24 @@ export default function CostAnalysis() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-        <DollarSign size={18} />
-        Cost Analysis
-      </h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <DollarSign size={18} />
+          Cost Analysis
+        </h2>
+        <select
+          value={planKey}
+          onChange={e => {
+            setPlanKey(e.target.value)
+            localStorage.setItem('oz-plan', e.target.value)
+          }}
+          className="text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-gray-600 dark:text-gray-300 cursor-pointer"
+        >
+          {Object.entries(PLANS).map(([key, plan]) => (
+            <option key={key} value={key}>{plan.name} (${plan.monthly}/mo)</option>
+          ))}
+        </select>
+      </div>
 
       {!isConfigured() ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">Connect Supabase to see costs.</p>
@@ -154,7 +172,7 @@ export default function CostAnalysis() {
                   <div key={key} className="flex items-center justify-between text-sm">
                     <span className="text-gray-700 dark:text-gray-300">
                       {plan.name}
-                      {key === 'max_5x' && <span className="text-xs text-blue-500 ml-1">(current)</span>}
+                      {key === planKey && <span className="text-xs text-blue-500 ml-1">(current)</span>}
                     </span>
                     <span className={better ? 'text-green-600 dark:text-green-400 font-medium' : 'text-red-500 dark:text-red-400'}>
                       ${plan.monthly}/mo {better ? '(saves $' + Math.abs(diff).toFixed(2) + ')' : ''}

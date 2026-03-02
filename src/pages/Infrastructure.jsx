@@ -1,4 +1,4 @@
-import { useRealtimeTable, useLatestPerGroup } from '../hooks/useSupabase'
+import { useRealtimeTable, useRealtimeSingle, useLatestPerGroup } from '../hooks/useSupabase'
 import { isConfigured } from '../lib/supabase'
 import SecurityMonitor from '../components/SecurityMonitor'
 import {
@@ -135,6 +135,26 @@ function ApiHealthDetailed() {
 }
 
 function SystemInfo() {
+  const { data: status } = useRealtimeSingle('oz_status')
+
+  const uptimeHours = status?.system_info?.uptime_hours
+  const uptimeText = uptimeHours != null
+    ? (uptimeHours >= 24 ? `${Math.floor(uptimeHours / 24)}d ${uptimeHours % 24}h` : `${uptimeHours}h`)
+    : '--'
+  const memPct = status?.system_info?.memory_used_pct
+  const diskFree = status?.system_info?.disk_free
+
+  const items = [
+    { label: 'Machine', value: 'Mac Mini (Denver)' },
+    { label: 'Hostname', value: status?.system_info?.hostname || 'macs-mac-mini' },
+    { label: 'Uptime', value: uptimeText },
+    { label: 'Memory', value: memPct != null ? `${memPct}% used` : '--' },
+    { label: 'Disk Free', value: diskFree || '--' },
+    { label: 'Stack', value: 'Node 22 / Supabase / Vercel' },
+    { label: 'Bot', value: 'ClaudeClaw (Telegram)' },
+    { label: 'Timezone', value: 'Mountain Time (MT)' },
+  ]
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -142,30 +162,12 @@ function SystemInfo() {
         System Info
       </h2>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Machine</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-white">Mac Mini (Denver)</div>
-        </div>
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">User</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-white">aiosadmin</div>
-        </div>
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Stack</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-white">Node 22 / Supabase / Vercel</div>
-        </div>
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Bot</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-white">ClaudeClaw (Telegram)</div>
-        </div>
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Timezone</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-white">Mountain Time (MT)</div>
-        </div>
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Automations</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-white">n8n / GoHighLevel</div>
-        </div>
+        {items.map(item => (
+          <div key={item.label} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{item.label}</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">{item.value}</div>
+          </div>
+        ))}
       </div>
     </div>
   )

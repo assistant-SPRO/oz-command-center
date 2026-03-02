@@ -46,10 +46,10 @@ export default function QuickStats() {
     },
     {
       label: 'Security',
-      value: daysSinceScan !== null ? (daysSinceScan === 0 ? 'Today' : `${daysSinceScan}d ago`) : 'No scan',
+      value: daysSinceScan !== null ? (daysSinceScan === 0 ? 'Today' : `${daysSinceScan}d ago`) : 'Awaiting',
       icon: Shield,
-      color: daysSinceScan !== null && daysSinceScan <= 1 ? 'text-green-500' : 'text-orange-500',
-      bg: daysSinceScan !== null && daysSinceScan <= 1 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-orange-50 dark:bg-orange-900/20',
+      color: daysSinceScan !== null && daysSinceScan <= 1 ? 'text-green-500' : daysSinceScan === null ? 'text-gray-400' : 'text-orange-500',
+      bg: daysSinceScan !== null && daysSinceScan <= 1 ? 'bg-green-50 dark:bg-green-900/20' : daysSinceScan === null ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-orange-50 dark:bg-orange-900/20',
     },
   ]
 

@@ -22,7 +22,7 @@ export default function Overview({ onNavigate }) {
             <CostAnalysis />
           </div>
         </div>
-        <RecentActivity limit={8} onViewAll={() => {}} />
+        <RecentActivity limit={8} />
       </div>
 
       {/* Business Overview */}
