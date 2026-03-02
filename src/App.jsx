@@ -1,5 +1,6 @@
 import { useTheme } from './hooks/useTheme'
 import { useRouter } from './hooks/useRouter'
+import { useAuth } from './hooks/useAuth'
 import StatusBar from './components/StatusBar'
 import Navigation from './components/Navigation'
 import ThemeToggle from './components/ThemeToggle'
@@ -7,7 +8,9 @@ import Overview from './pages/Overview'
 import Projects from './pages/Projects'
 import Claude from './pages/Claude'
 import Infrastructure from './pages/Infrastructure'
+import Login from './pages/Login'
 import { isConfigured } from './lib/supabase'
+import { LogOut } from 'lucide-react'
 
 const pages = {
   overview: Overview,
@@ -19,7 +22,22 @@ const pages = {
 export default function App() {
   const { dark, toggle } = useTheme()
   const { page, navigate } = useRouter()
+  const { session, loading, signIn, signOut } = useAuth()
   const Page = pages[page] || Overview
+
+  // Show loading spinner while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-navy border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Show login page if not authenticated
+  if (!session) {
+    return <Login onLogin={signIn} />
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -41,6 +59,13 @@ export default function App() {
               </span>
             )}
             <ThemeToggle dark={dark} onToggle={toggle} />
+            <button
+              onClick={signOut}
+              title="Sign out"
+              className="text-white/60 hover:text-white transition-colors p-1"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
       </header>

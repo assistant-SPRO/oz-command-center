@@ -3,14 +3,25 @@ import { useRealtimeTable } from '../hooks/useSupabase'
 import { isConfigured } from '../lib/supabase'
 import { DollarSign, TrendingDown, TrendingUp } from 'lucide-react'
 
-// Current Anthropic API pricing per million tokens (as of 2025)
+// Current Anthropic API pricing per million tokens (updated March 2026)
+// Source: https://platform.claude.com/docs/en/about-claude/pricing
 const MODEL_PRICING = {
-  'claude-sonnet-4-20250514': { input: 3.00, output: 15.00, cached: 0.30 },
+  // Claude 4.6 family (Feb 2026)
+  'claude-opus-4-6-20260214': { input: 5.00, output: 25.00, cached: 0.50 },
+  'claude-sonnet-4-6-20260214': { input: 3.00, output: 15.00, cached: 0.30 },
+  // Claude 4.5 family
+  'claude-opus-4-5-20250630': { input: 5.00, output: 25.00, cached: 0.50 },
+  'claude-sonnet-4-5-20250514': { input: 3.00, output: 15.00, cached: 0.30 },
+  'claude-haiku-4-5-20250514': { input: 1.00, output: 5.00, cached: 0.10 },
+  // Claude 4.x
+  'claude-opus-4-1-20250630': { input: 15.00, output: 75.00, cached: 1.50 },
   'claude-opus-4-20250514': { input: 15.00, output: 75.00, cached: 1.50 },
-  'claude-haiku-3-20250414': { input: 0.25, output: 1.25, cached: 0.025 },
+  'claude-sonnet-4-20250514': { input: 3.00, output: 15.00, cached: 0.30 },
+  // Claude 3.x legacy
   'claude-3-5-sonnet-20241022': { input: 3.00, output: 15.00, cached: 0.30 },
   'claude-3-5-haiku-20241022': { input: 0.80, output: 4.00, cached: 0.08 },
   'claude-3-opus-20240229': { input: 15.00, output: 75.00, cached: 1.50 },
+  'claude-haiku-3-20250414': { input: 0.25, output: 1.25, cached: 0.03 },
 }
 
 // Subscription costs
@@ -23,7 +34,7 @@ const PLANS = {
 function estimateCost(usage) {
   let totalCost = 0
   for (const u of usage) {
-    const pricing = MODEL_PRICING[u.model] || MODEL_PRICING['claude-sonnet-4-20250514']
+    const pricing = MODEL_PRICING[u.model] || MODEL_PRICING['claude-sonnet-4-6-20260214']
     const inputCost = ((u.input_tokens || 0) / 1_000_000) * pricing.input
     const outputCost = ((u.output_tokens || 0) / 1_000_000) * pricing.output
     const cacheCost = ((u.cache_read_tokens || 0) / 1_000_000) * pricing.cached
