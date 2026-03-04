@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react'
 
-const PAGES = ['overview', 'projects', 'claude', 'infrastructure']
+const PAGES = ['tasks', 'agents', 'calendar', 'projects', 'system', 'memory', 'radar', 'pipeline']
 
-export function useRouter() {
+export function useRouter(defaultPage = 'tasks') {
   const [page, setPage] = useState(() => {
-    const hash = window.location.hash.replace('#', '') || 'overview'
-    return PAGES.includes(hash) ? hash : 'overview'
+    const hash = window.location.hash.replace('#', '') || defaultPage
+    return PAGES.includes(hash) ? hash : defaultPage
   })
 
   useEffect(() => {
     const onHash = () => {
-      const hash = window.location.hash.replace('#', '') || 'overview'
-      setPage(PAGES.includes(hash) ? hash : 'overview')
+      const hash = window.location.hash.replace('#', '') || defaultPage
+      setPage(PAGES.includes(hash) ? hash : defaultPage)
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
-  }, [])
+  }, [defaultPage])
 
   const navigate = (p) => {
     window.location.hash = p
+    setPage(p)
   }
 
   return { page, navigate, PAGES }

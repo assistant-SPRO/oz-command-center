@@ -1,94 +1,79 @@
-import { useTheme } from './hooks/useTheme'
+import { useState } from 'react'
 import { useRouter } from './hooks/useRouter'
 import { useAuth } from './hooks/useAuth'
-import StatusBar from './components/StatusBar'
-import Navigation from './components/Navigation'
-import ThemeToggle from './components/ThemeToggle'
-import Overview from './pages/Overview'
-import Projects from './pages/Projects'
-import Claude from './pages/Claude'
-import Infrastructure from './pages/Infrastructure'
+import { useTheme } from './hooks/useTheme'
+import Sidebar from './components/Sidebar'
 import Login from './pages/Login'
+import Tasks from './pages/Tasks'
+import Agents from './pages/Agents'
+import CalendarPage from './pages/CalendarPage'
+import Projects from './pages/Projects'
+import System from './pages/System'
 import { isConfigured } from './lib/supabase'
-import { LogOut } from 'lucide-react'
 
 const pages = {
-  overview: Overview,
+  tasks: Tasks,
+  agents: Agents,
+  calendar: CalendarPage,
   projects: Projects,
-  claude: Claude,
-  infrastructure: Infrastructure,
+  system: System,
 }
 
 export default function App() {
-  const { dark, toggle } = useTheme()
-  const { page, navigate } = useRouter()
+  const { dark } = useTheme()
+  const { page, navigate } = useRouter('tasks')
   const { session, loading, signIn, signOut } = useAuth()
-  const Page = pages[page] || Overview
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  // Show loading spinner while checking auth state
+  const Page = pages[page] || Tasks
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-navy border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
-  // Show login page if not authenticated
   if (!session) {
     return <Login onLogin={signIn} />
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-navy shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={() => navigate('overview')}
-            className="flex items-center gap-3 hover:opacity-80"
-          >
-            <div className="text-xl font-bold text-white tracking-tight">
-              OZ <span className="font-normal text-white/70">Command Center</span>
-            </div>
-          </button>
+    <div className="flex h-screen bg-[#0f1923] overflow-hidden">
+      <Sidebar
+        current={page}
+        onNavigate={navigate}
+        onSignOut={signOut}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(c => !c)}
+      />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="h-[56px] border-b border-white/5 bg-[#0d1117] flex items-center justify-between px-6 shrink-0">
+          <h1 className="text-white/80 text-sm font-medium capitalize">
+            {page === 'tasks' ? 'Mission Control' : page === 'calendar' ? 'Scheduled Tasks' : page.charAt(0).toUpperCase() + page.slice(1)}
+          </h1>
           <div className="flex items-center gap-3">
             {!isConfigured() && (
-              <span className="text-xs text-yellow-300 bg-yellow-500/20 px-2 py-1 rounded">
-                No Supabase
+              <span className="text-[10px] text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full">
+                Supabase not connected
               </span>
             )}
-            <ThemeToggle dark={dark} onToggle={toggle} />
-            <button
-              onClick={signOut}
-              title="Sign out"
-              className="text-white/60 hover:text-white transition-colors p-1"
-            >
-              <LogOut size={16} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs text-white/30">Oz online</span>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Navigation Tabs */}
-      <Navigation current={page} onNavigate={navigate} />
-
-      {/* Status Bar - always visible */}
-      <div className="max-w-7xl mx-auto px-4 pt-4">
-        <StatusBar />
+        {/* Scrollable page content */}
+        <main className="flex-1 overflow-y-auto">
+          <Page onNavigate={navigate} />
+        </main>
       </div>
-
-      {/* Page Content */}
-      <main className="max-w-7xl mx-auto px-4 py-4">
-        <Page onNavigate={navigate} />
-      </main>
-
-      {/* Footer */}
-      <footer className="max-w-7xl mx-auto px-4 py-6 text-center">
-        <p className="text-xs text-gray-400 dark:text-gray-600">
-          Oz Command Center / Real-time via Supabase / Built by Oz
-        </p>
-      </footer>
     </div>
   )
 }
