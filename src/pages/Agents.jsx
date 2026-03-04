@@ -1,6 +1,7 @@
 import { useRealtimeTable } from '../hooks/useSupabase'
 import { isConfigured } from '../lib/supabase'
 import { Bot, Zap, Video, FileText, TrendingUp, Megaphone, Clock, CheckCircle, Lock } from 'lucide-react'
+import ActiveRuns from '../components/ActiveRuns'
 
 function timeAgo(date) {
   if (!date) return 'never'
@@ -191,9 +192,12 @@ export default function Agents() {
   }).length
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
+      {/* Live activity panel -- always at top */}
+      <ActiveRuns />
+
       {/* Header stats */}
-      <div className="flex items-center gap-6 mb-6">
+      <div className="flex items-center gap-6">
         <StatChip value={activeAgents} label="Active" color="text-green-400" />
         <StatChip value={AGENTS.length - activeAgents} label="Planned" color="text-white/30" />
         <StatChip value={totalActions} label="Total actions" color="text-white/60" />
@@ -201,7 +205,7 @@ export default function Agents() {
       </div>
 
       {/* Active agents */}
-      <div className="mb-4">
+      <div>
         <p className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3">Operations Layer</p>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {AGENTS.filter(a => a.status === 'active').map(agent => (

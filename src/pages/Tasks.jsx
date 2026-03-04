@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRealtimeTable } from '../hooks/useSupabase'
 import { isConfigured } from '../lib/supabase'
 import { Plus, X, Zap, Clock, Activity } from 'lucide-react'
@@ -162,8 +162,17 @@ function LiveActivity() {
   const { data: logs, loading } = useRealtimeTable('agent_logs', {
     orderBy: 'created_at',
     ascending: false,
-    limit: 25,
+    limit: 50,
   })
+  const [expanded, setExpanded] = useState(new Set())
+
+  const toggle = useCallback((id) => {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }, [])
 
   return (
     <div className="flex flex-col h-full">
@@ -186,25 +195,51 @@ function LiveActivity() {
       ) : (
         <div className="space-y-0 overflow-y-auto flex-1 -mx-1">
           {logs.map(log => {
-            const actionColor = ACTION_COLORS[log.action?.toLowerCase()] || 'text-white/50'
+            const isExpanded = expanded.has(log.id)
+            const isError = !log.success
+            const details = log.metadata || log.details
             return (
-              <div key={log.id} className="px-1 py-2 border-b border-white/5 last:border-0">
+              <button
+                key={log.id}
+                onClick={() => toggle(log.id)}
+                className="w-full text-left px-1 py-2 border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors"
+              >
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className={`text-[10px] font-semibold uppercase ${actionColor}`}>
-                    {log.agent || 'Oz'}
+                  <span className={`text-[10px] font-semibold uppercase ${isError ? 'text-red-400' : 'text-indigo-400'}`}>
+                    {log.agent || 'oz'}
                   </span>
+                  {isError && (
+                    <span className="text-[10px] text-red-500 bg-red-500/10 px-1 rounded">error</span>
+                  )}
                   <span className="text-[10px] text-white/25 ml-auto shrink-0">
                     {timeAgo(log.created_at)}
                   </span>
                 </div>
-                <p className="text-xs text-white/55 leading-snug line-clamp-2">
+                <p className={`text-xs text-white/55 leading-snug ${isExpanded ? '' : 'line-clamp-2'}`}>
                   {log.action}
-                  {log.details ? `: ${typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}` : ''}
                 </p>
-                {!log.success && log.error_msg && (
-                  <p className="text-[10px] text-red-400 mt-0.5 line-clamp-1">{log.error_msg}</p>
+                {isExpanded && (
+                  <div className="mt-1.5 space-y-1">
+                    {log.error_msg && (
+                      <p className="text-[10px] text-red-400 bg-red-500/10 rounded px-1.5 py-1 font-mono break-words">
+                        {log.error_msg}
+                      </p>
+                    )}
+                    {log.tokens_used && (
+                      <p className="text-[10px] text-white/30">
+                        {log.tokens_used.toLocaleString()} tokens
+                        {log.duration_ms ? ` · ${(log.duration_ms / 1000).toFixed(1)}s` : ''}
+                        {details?.cost_usd ? ` · $${Number(details.cost_usd).toFixed(4)}` : ''}
+                      </p>
+                    )}
+                    {details && Object.keys(details).length > 0 && (
+                      <pre className="text-[10px] text-white/25 bg-white/5 rounded p-1.5 overflow-x-auto font-mono whitespace-pre-wrap break-words">
+                        {JSON.stringify(details, null, 2)}
+                      </pre>
+                    )}
+                  </div>
                 )}
-              </div>
+              </button>
             )
           })}
         </div>

@@ -7,7 +7,8 @@ import {
   Server,
   Radar,
   GitBranch,
-  BarChart3,
+  ScrollText,
+  Search,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -20,12 +21,13 @@ const NAV_ITEMS = [
   { key: 'calendar',  label: 'Calendar',  icon: CalendarDays, active: true },
   { key: 'projects',  label: 'Projects',  icon: FolderKanban, active: true },
   { key: 'system',    label: 'System',    icon: Server,       active: true },
+  { key: 'audit',     label: 'Audit Log', icon: ScrollText,   active: true },
   { key: 'memory',    label: 'Memory',    icon: Brain,        active: false, soon: true },
   { key: 'radar',     label: 'Radar',     icon: Radar,        active: false, soon: true },
   { key: 'pipeline',  label: 'Pipeline',  icon: GitBranch,    active: false, soon: true },
 ]
 
-export default function Sidebar({ current, onNavigate, onSignOut, collapsed, onToggle }) {
+export default function Sidebar({ current, onNavigate, onSignOut, collapsed, onToggle, onSearch }) {
   return (
     <aside className={`
       flex flex-col h-screen bg-[#0d1117] border-r border-white/5
@@ -100,6 +102,20 @@ export default function Sidebar({ current, onNavigate, onSignOut, collapsed, onT
 
       {/* Bottom controls */}
       <div className="border-t border-white/5 p-2 space-y-0.5 shrink-0">
+        {/* Search button */}
+        <button
+          onClick={onSearch}
+          title={collapsed ? 'Search (⌘K)' : undefined}
+          className={`w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 text-white/30 hover:text-white hover:bg-white/5 transition-colors ${collapsed ? 'justify-center' : ''}`}
+        >
+          <Search size={15} className="shrink-0" />
+          {!collapsed && (
+            <span className="text-xs flex-1">Search</span>
+          )}
+          {!collapsed && (
+            <span className="text-[10px] text-white/20 font-mono">⌘K</span>
+          )}
+        </button>
         <button
           onClick={onToggle}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}

@@ -6,6 +6,7 @@ import ModelBreakdown from '../components/ModelBreakdown'
 import CostAnalysis from '../components/CostAnalysis'
 import ApiHealth from '../components/ApiHealth'
 import SecurityMonitor from '../components/SecurityMonitor'
+import ActiveRuns from '../components/ActiveRuns'
 
 export default function Overview({ onNavigate }) {
   return (
@@ -13,16 +14,19 @@ export default function Overview({ onNavigate }) {
       {/* Quick Stats Row */}
       <QuickStats />
 
-      {/* Claude Intelligence + Recent Activity */}
+      {/* Live Agent Activity + Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ClaudeUsage />
-            <ModelBreakdown />
-            <CostAnalysis />
-          </div>
+          <ActiveRuns />
         </div>
         <RecentActivity limit={8} />
+      </div>
+
+      {/* Claude Intelligence */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <ClaudeUsage />
+        <ModelBreakdown />
+        <CostAnalysis />
       </div>
 
       {/* Business Overview */}

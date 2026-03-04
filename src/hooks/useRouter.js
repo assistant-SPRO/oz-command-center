@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const PAGES = ['tasks', 'agents', 'calendar', 'projects', 'system', 'memory', 'radar', 'pipeline']
+const PAGES = ['tasks', 'agents', 'calendar', 'projects', 'system', 'audit', 'memory', 'radar', 'pipeline']
 
 export function useRouter(defaultPage = 'tasks') {
   const [page, setPage] = useState(() => {
